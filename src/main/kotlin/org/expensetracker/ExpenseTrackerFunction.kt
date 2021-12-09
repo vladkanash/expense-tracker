@@ -26,13 +26,20 @@ class ExpenseTrackerFunction : HttpFunction {
         else -> ""
     }
 
-    private fun Update.isCommand(command: String) = message?.text?.drop(1)?.startsWith(command) == true
+    private fun Update.isCommand(command: String) =
+        message?.text?.drop(1)?.startsWith(command) == true
 
     private fun handleAddExpense(update: Update): String {
-        val amount = update.getAmount() ?: return "You haven't specified expense amount"
+        val amount = update.getAmount() ?: return "This expense amount seems incorrect"
         val summary = addAmount(update, amount) ?: return "There was an error trying to add expense"
 
         return "Expense added successfully, your new total is ${summary.getPrettyAmount()}"
+    }
+
+    private fun Update.getAmount() = try {
+        message?.text?.drop(12)?.trim()?.toLong()
+    } catch (e: NumberFormatException) {
+        null
     }
 
     private fun addAmount(update: Update, amount: Long): Summary? {
@@ -47,15 +54,13 @@ class ExpenseTrackerFunction : HttpFunction {
     )
 
     private fun handleGetSummary(update: Update): String {
-        val summary =
-            FirebaseRepository.getSummaryById(update.getUserId()) ?: return "There was an error trying to add expense"
+        val summary = FirebaseRepository.getSummaryById(update.getUserId())
+            ?: return "There was an error trying to add expense"
 
         return "Your expense total is: ${summary.getPrettyAmount()}"
     }
 
     private fun Summary.getPrettyAmount() = "${amountInCents.toDouble() / 100}$"
-
-    private fun Update.getAmount() = message?.text?.drop(12)?.toLong()
 
     private fun Update.getUserId() = message?.from?.id!!
 }
