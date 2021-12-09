@@ -1,21 +1,48 @@
-plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.5.10'
-    id 'application'
+buildscript {
+    ext.kotlin_version = '1.5.21'
+    ext.fuel_version = '2.3.1'
 }
 
-group = 'me.vladk'
+plugins {
+    id("org.jetbrains.kotlin.jvm") version "$kotlin_version"
+    id("org.jetbrains.kotlin.plugin.serialization") version "$kotlin_version"
+}
+
+group = 'me.vladkanash'
 version = '1.0-SNAPSHOT'
+
+configurations {
+    invoker
+}
 
 repositories {
     mavenCentral()
+    maven { url "https://jitpack.io" }
 }
 
 dependencies {
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.5.21'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1'
+
+    implementation 'com.google.cloud.functions:functions-framework-api:1.0.4'
+    implementation 'com.google.cloud:google-cloudevent-types:0.3.0'
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.2.2'
+
+    implementation 'io.github.kotlin-telegram-bot.kotlin-telegram-bot:telegram:6.0.4'
+    implementation "com.github.kittinunf.fuel:fuel:$fuel_version"
+    implementation "com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuel_version"
+
+    testImplementation 'org.jetbrains.kotlin:kotlin-test:1.5.21'
+    testImplementation 'io.mockk:mockk:1.12.1'
+
+    invoker 'com.google.cloud.functions.invoker:java-function-invoker:1.0.3'
 }
 
 test {
     useJUnitPlatform()
+    environment "FIREBASE_URL", "test-url"
+    environment "BOT_TOKEN", "test-token"
 }
 
 compileKotlin {
@@ -26,6 +53,15 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = '11'
 }
 
-application {
-    mainClassName = 'MainKt'
+task runFunction(type: JavaExec) {
+    main = 'com.google.cloud.functions.invoker.runner.Invoker'
+    classpath = configurations.invoker
+    inputs.files(configurations.runtimeClasspath, sourceSets.main.output)
+    args(
+            '--target', project.findProperty('run.functionTarget') ?: 'org.expensetracker.ExpenseTrackerHandler',
+            '--port', project.findProperty('run.port') ?: 8080
+    )
+    doFirst {
+        args(['--classpath', files(configurations.runtimeClasspath, sourceSets.main.output).asPath])
+    }
 }
