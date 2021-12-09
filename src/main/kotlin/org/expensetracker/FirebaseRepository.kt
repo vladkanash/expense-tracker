@@ -20,7 +20,7 @@ private const val EXPENSE_SUMMARY_URI = "/summary"
 @Serializable
 data class Summary(val amountInCents: Long)
 
-object FirebaseRepository {
+class FirebaseRepository {
 
     private val credentials: GoogleCredentials
 

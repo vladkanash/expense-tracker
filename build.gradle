@@ -65,3 +65,7 @@ task runFunction(type: JavaExec) {
         args(['--classpath', files(configurations.runtimeClasspath, sourceSets.main.output).asPath])
     }
 }
+
+test {
+    useJUnitPlatform()
+}

@@ -5,25 +5,29 @@ import com.google.cloud.functions.HttpFunction
 import com.google.cloud.functions.HttpRequest
 import com.google.cloud.functions.HttpResponse
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlin.math.roundToLong
 
 @Suppress("unused")
 @ExperimentalSerializationApi
-class ExpenseTrackerFunction : HttpFunction {
+class ExpenseTrackerFunction(
+    private val repository: FirebaseRepository = FirebaseRepository(),
+    private val telegramService: TelegramService = TelegramService(),
+) : HttpFunction {
 
     override fun service(request: HttpRequest, response: HttpResponse) {
-        val update = TelegramService.parseUpdate(request.reader.readText())
+        val update = telegramService.parseUpdate(request.reader.readText())
         println("Update is $update")
 
-        val responseText = handleUpdate(update)
-
-        TelegramService.sendMessage(update.getUserId(), responseText)
+        handleUpdate(update)?.also {
+            telegramService.sendMessage(update.getUserId(), it)
+        }
         request.reader.close()
     }
 
-    private fun handleUpdate(update: Update): String = when {
+    private fun handleUpdate(update: Update): String? = when {
         update.isCommand("getSummary") -> handleGetSummary(update)
         update.isCommand("addExpense") -> handleAddExpense(update)
-        else -> ""
+        else -> null
     }
 
     private fun Update.isCommand(command: String) =
@@ -36,17 +40,16 @@ class ExpenseTrackerFunction : HttpFunction {
         return "Expense added successfully, your new total is ${summary.getPrettyAmount()}"
     }
 
-    private fun Update.getAmount() = try {
-        message?.text?.drop(12)?.trim()?.toLong()
-    } catch (e: NumberFormatException) {
-        null
-    }
+    private fun Update.getAmount() =
+        message?.text?.drop(12)?.trim()
+            ?.toDoubleOrNull()
+            ?.let { (it * 100).roundToLong() }
 
     private fun addAmount(update: Update, amount: Long): Summary? {
         val id = update.getUserId()
-        return FirebaseRepository.getSummaryById(id)
+        return repository.getSummaryById(id)
             ?.addAmount(amount)
-            ?.let { FirebaseRepository.updateSummary(id, it) }
+            ?.let { repository.updateSummary(id, it) }
     }
 
     private fun Summary.addAmount(amount: Long) = copy(
@@ -54,10 +57,10 @@ class ExpenseTrackerFunction : HttpFunction {
     )
 
     private fun handleGetSummary(update: Update): String {
-        val summary = FirebaseRepository.getSummaryById(update.getUserId())
+        val summary = repository.getSummaryById(update.getUserId())
             ?: return "There was an error trying to add expense"
 
-        return "Your expense total is: ${summary.getPrettyAmount()}"
+        return "Your total expense is: ${summary.getPrettyAmount()}"
     }
 
     private fun Summary.getPrettyAmount() = "${amountInCents.toDouble() / 100}$"
