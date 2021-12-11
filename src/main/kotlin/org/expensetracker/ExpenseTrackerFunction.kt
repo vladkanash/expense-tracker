@@ -14,12 +14,11 @@ class ExpenseTrackerFunction(
 
     override fun service(request: HttpRequest, response: HttpResponse) {
         val update = telegramService.parseUpdate(request.reader.readText())
-        println("Update is $update")
+        request.reader.close()
 
         handleUpdate(update)?.also {
             telegramService.sendMessage(update.getUserId(), it)
         }
-        request.reader.close()
     }
 
     private fun handleUpdate(update: Update): String? = when {
