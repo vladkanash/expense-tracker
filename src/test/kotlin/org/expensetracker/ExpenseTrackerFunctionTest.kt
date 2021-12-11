@@ -9,7 +9,6 @@ import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
-import kotlinx.serialization.ExperimentalSerializationApi
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -17,7 +16,6 @@ import java.io.BufferedReader
 import java.io.Reader
 
 @ExtendWith(MockKExtension::class)
-@ExperimentalSerializationApi
 internal class ExpenseTrackerFunctionTest {
 
     @InjectMockKs

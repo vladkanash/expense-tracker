@@ -4,11 +4,9 @@ import com.github.kotlintelegrambot.entities.Update
 import com.google.cloud.functions.HttpFunction
 import com.google.cloud.functions.HttpRequest
 import com.google.cloud.functions.HttpResponse
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlin.math.roundToLong
 
 @Suppress("unused")
-@ExperimentalSerializationApi
 class ExpenseTrackerFunction(
     private val repository: FirebaseRepository = FirebaseRepository(),
     private val telegramService: TelegramService = TelegramService(),
