@@ -96,7 +96,7 @@ internal class ExpenseTrackerFunctionTest {
 
     @Test
     fun `Should process incorrect number in addExpense command`() {
-        val userId = 23534672971
+        val userId = 23534672972
         val initialSummary = Summary(amountInCents = 20000)
         val updatedSummary = Summary(amountInCents = 21056)
 
@@ -132,7 +132,7 @@ internal class ExpenseTrackerFunctionTest {
 
     @Test
     fun `Should create new summary if it doesn't exist for user`() {
-        val userId = 23534672971
+        val userId = 17927643532
         val initialSummary = Summary(amountInCents = 20000)
 
         val updateRequest = createUpdateRequest()
