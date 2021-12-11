@@ -48,17 +48,18 @@ class ExpenseTrackerFunction(
     private fun addAmount(update: Update, amount: Long): Summary? {
         val id = update.getUserId()
         return repository.getSummaryById(id)
-            ?.addAmount(amount)
-            ?.let { repository.updateSummary(id, it) }
+            .addAmount(amount)
+            .let { repository.updateSummary(id, it) }
     }
 
-    private fun Summary.addAmount(amount: Long) = copy(
-        amountInCents = this.amountInCents + amount
-    )
+    private fun Summary?.addAmount(amount: Long) = when (this) {
+        null -> Summary(amount)
+        else -> copy(amountInCents = this.amountInCents + amount)
+    }
 
     private fun handleGetSummary(update: Update): String {
         val summary = repository.getSummaryById(update.getUserId())
-            ?: return "There was an error trying to add expense"
+            ?: return "Unable to find any expenses. Try create one first"
 
         return "Your total expense is: ${summary.getPrettyAmount()}"
     }

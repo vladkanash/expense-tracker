@@ -130,6 +130,23 @@ internal class ExpenseTrackerFunctionTest {
         verify(exactly = 0) { telegramService.sendMessage(any(), any()) }
     }
 
+    @Test
+    fun `Should create new summary if it doesn't exist for user`() {
+        val userId = 23534672971
+        val initialSummary = Summary(amountInCents = 20000)
+
+        val updateRequest = createUpdateRequest()
+
+        every { reader.readText() } returns updateRequest
+        every { telegramService.parseUpdate(updateRequest) } returns createUpdate(userId, "/addExpense 200")
+        every { repository.getSummaryById(userId) } returns null
+        every { repository.updateSummary(userId, initialSummary) } returns initialSummary
+
+        function.service(request, mockk())
+
+        verify(exactly = 1) { telegramService.sendMessage(any(), any()) }
+    }
+
     private fun createUpdate(userId: Long, text: String) = Update(
         updateId = 34245235636,
         message = Message(

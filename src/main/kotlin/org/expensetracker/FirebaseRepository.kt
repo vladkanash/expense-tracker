@@ -62,9 +62,6 @@ class FirebaseRepository {
     private fun getResponse(result: Result<Summary, FuelError>) =
         when (result) {
             is Success -> result.get()
-            is Failure -> {
-                println(result.getException())
-                null
-            }
+            is Failure -> null
         }
 }
